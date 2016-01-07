@@ -47,7 +47,8 @@ def get_regression_predictions(input_feature, intercept, slope):
 
 # predicted value for 2650 sq. ft. house
 predicted_value_2650 = get_regression_predictions(2650, intercept, slope)
-print "Predicted Valye for house with square feet 2650 is " , predicted_value_2650
+print "Predicted Valye for house with square feet 2650 is ", predicted_value_2650
+
 
 def get_residual_sum_of_squares(input_feature, output, intercept, slope):
     # First get the predictions
@@ -59,21 +60,22 @@ def get_residual_sum_of_squares(input_feature, output, intercept, slope):
     rss_square_sum = rss_square.sum()
     return (rss_square_sum)
 
+
 def inverse_regression_predictions(output, intercept, slope):
     estimated_input = ((output - intercept) / slope)
     return (estimated_input)
 
 
-sqft_8000000= inverse_regression_predictions(800000, intercept, slope)
+sqft_8000000 = inverse_regression_predictions(800000, intercept, slope)
 print "Sqft of house with price 800000 is ", sqft_8000000
 
 input_bedrooms = train_data['bedrooms']
 intercept_bedroom, slope_bedroom = simple_linear_regression(input_bedrooms, output)
-print "intercept of linear model with feature as bedrooms" , intercept_bedroom
-print "slope of linear model with feature as bedrooms" , slope_bedroom
+print "intercept of linear model with feature as bedrooms", intercept_bedroom
+print "slope of linear model with feature as bedrooms", slope_bedroom
 
-rss_sqft = get_residual_sum_of_squares(input_feature,output,intercept,slope)
-rss_bedrooms = get_residual_sum_of_squares(input_bedrooms,output,intercept_bedroom,slope_bedroom)
+rss_sqft = get_residual_sum_of_squares(input_feature, output, intercept, slope)
+rss_bedrooms = get_residual_sum_of_squares(input_bedrooms, output, intercept_bedroom, slope_bedroom)
 
-print "residual sum of squares of linear model with features as sqft_living is " , rss_sqft
-print "residual sum of squares of linear model with features as bedrooms is " , rss_bedrooms
+print "residual sum of squares of linear model with features as sqft_living is ", rss_sqft
+print "residual sum of squares of linear model with features as bedrooms is ", rss_bedrooms

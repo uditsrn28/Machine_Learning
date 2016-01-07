@@ -56,7 +56,7 @@ def regression_gradient_descent(feature_matrix, output, initial_weights, step_si
             gradient_sum_squares = (derivative * derivative).sum()
             # print "gradient sum square is ", gradient_sum_squares
             # update the weight based on step size and derivative:
-            weights = weights - step_size * derivative
+            weights[i] = weights[i] - (step_size * derivative)
         gradient_magnitude = math.sqrt(gradient_sum_squares)
         if gradient_magnitude < tolerance:
             converged = True
@@ -66,13 +66,11 @@ def regression_gradient_descent(feature_matrix, output, initial_weights, step_si
 def get_residual_sum_of_squares(predictions, data, outcome):
     # First get the predictions -- predictions
     # Then compute the residuals/errors
-    # errors = data[outcome] - predictions
-    # print len(errors)
-    # # Then square and add them up
-    # error_square = (errors * errors)
-    # RSS = error_square.sum()
-    # print len(RSS)
-    exit()
+    errors = data[outcome] - predictions
+    # Then square and add them up
+    RSS = (errors * errors).sum()
+    # RSS = errors.dot(errors)
+    # compute y-Hw
     return RSS
 
 
@@ -96,8 +94,9 @@ test_simple_feature_matrix, test_output = get_numpy_data(test_data, features, ou
 test_predictions = predict_outcome(test_simple_feature_matrix, simple_weights)
 print "predictions for test is ", test_predictions
 
-# test_rss = get_residual_sum_of_squares(test_predictions, test_data, output_feature)
-# print "residual sum of squares of test data is ", test_rss
+test_rss = get_residual_sum_of_squares(test_predictions, test_data, output_feature)
+print "residual sum of squares of test data is ", test_rss
+
 
 multiple_features = ['sqft_living', 'sqft_living15']
 multiple_features_output = 'price'
@@ -113,9 +112,10 @@ multiple_model_weights = regression_gradient_descent(multi_feature_matrix, multi
 
 print "Multiple model weights are ", multiple_model_weights
 
-multi_model_test_simple_feature_matrix, multi_model_test_output = get_numpy_data(test_data, multiple_features, multiple_features_output)
-multi_model_test_predictions = predict_outcome(test_simple_feature_matrix, simple_weights)
+multi_model_test_simple_feature_matrix, multi_model_test_output = get_numpy_data(test_data, multiple_features,
+                                                                                 multiple_features_output)
+multi_model_test_predictions = predict_outcome(multi_model_test_simple_feature_matrix, multiple_model_weights)
 print "multil model predictions for test is ", multi_model_test_predictions
 
-# multi_model_test_rss = get_residual_sum_of_squares(multi_model_test_predictions, test_data, multiple_features_output)
-# print "residual sum of squares of test data is ", multi_model_test_rss
+multi_model_test_rss = get_residual_sum_of_squares(multi_model_test_predictions, test_data, multiple_features_output)
+print "residual sum of squares of test data is ", multi_model_test_rss

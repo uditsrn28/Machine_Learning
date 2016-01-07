@@ -21,7 +21,7 @@ sales = graphlab.SFrame('kc_house_data.gl/')
 sales['bedrooms_squared'] = sales['bedrooms'] * sales['bedrooms']
 sales['bed_bath_rooms'] = sales['bedrooms'] * sales['bathrooms']
 sales['log_sqft_living'] = sales['sqft_living'].apply(get_log)
-sales['lat_plus_long'] = sales['lat'] * sales['long']
+sales['lat_plus_long'] = sales['lat'] + sales['long']
 
 train_data, test_data = sales.random_split(.8, seed=0)
 
@@ -53,3 +53,6 @@ print "rss for model 3 on test data", get_residual_sum_of_squares(model_3, test_
 print "rss for model 1 on train data", get_residual_sum_of_squares(model_1, train_data, train_data['price'])
 print "rss for model 2 on train data", get_residual_sum_of_squares(model_2, train_data, train_data['price'])
 print "rss for model 3 on train data", get_residual_sum_of_squares(model_3, train_data, train_data['price'])
+
+
+print "price of 1 house in test set", test_data[0]['price']
