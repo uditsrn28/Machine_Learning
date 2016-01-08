@@ -66,11 +66,10 @@ def regression_gradient_descent(feature_matrix, output, initial_weights, step_si
 def get_residual_sum_of_squares(predictions, data, outcome):
     # First get the predictions -- predictions
     # Then compute the residuals/errors
-    errors = data[outcome] - predictions
+    actual_price = data[outcome].to_numpy()
+    errors = actual_price - predictions
     # Then square and add them up
-    RSS = (errors * errors).sum()
-    # RSS = errors.dot(errors)
-    # compute y-Hw
+    RSS = errors.dot(errors.transpose()).sum()
     return RSS
 
 
