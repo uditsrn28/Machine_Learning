@@ -1,0 +1,143 @@
+__author__ = 'udit'
+
+import graphlab
+import matplotlib.pyplot as plt
+
+
+def polynomial_sframe(feature, degree):
+    # assume that degree >= 1
+    # initialize the SFrame:
+    poly_sframe = graphlab.SFrame()
+    # and set poly_sframe['power_1'] equal to the passed feature
+    poly_sframe['power_1'] = feature
+    # first check if degree > 1
+    if degree > 1:
+        # then loop over the remaining degrees:
+        for power in range(2, degree + 1):
+            # first we'll give the column a name:
+            name = 'power_' + str(power)
+            # assign poly_sframe[name] to be feature^power
+            poly_sframe[name] = feature.apply(lambda x: x ** power)
+    return poly_sframe
+
+
+def get_residual_sum_of_squares(model, data, outcome):
+    # First get the predictions
+    predictions = model.predict(data)
+    # Then compute the residuals/errors
+    errors = outcome - predictions
+    # Then square and add them up
+    rss = (errors * errors).sum()
+    return rss
+
+def get_model_with_degree_poly(data, degree, poly_input, outcome):
+    polynomial_data = polynomial_sframe(data[poly_input], degree)
+    features = polynomial_data.column_names()
+    polynomial_data[outcome] = data[outcome]
+    regression_model = graphlab.linear_regression.create(polynomial_data, target=outcome, features=features,
+                                                         validation_set=None, verbose=False)
+    return regression_model
+
+
+sales = graphlab.SFrame('kc_house_data.gl/')
+sales = sales.sort(['sqft_living', 'price'])
+
+poly1_data = polynomial_sframe(sales["sqft_living"], 1)
+model1_features = poly1_data.column_names()
+poly1_data['price'] = sales['price']
+
+poly2_data = polynomial_sframe(sales["sqft_living"], 2)
+model2_features = poly2_data.column_names()
+poly2_data['price'] = sales['price']
+
+poly3_data = polynomial_sframe(sales["sqft_living"], 3)
+model3_features = poly3_data.column_names()
+poly3_data['price'] = sales['price']
+
+poly15_data = polynomial_sframe(sales["sqft_living"], 15)
+model15_features = poly15_data.column_names()
+poly15_data['price'] = sales['price']
+
+model1 = graphlab.linear_regression.create(poly1_data, target='price', features=model1_features, validation_set=None,
+                                           verbose=False)
+model2 = graphlab.linear_regression.create(poly2_data, target='price', features=model2_features, validation_set=None,
+                                           verbose=False)
+model3 = graphlab.linear_regression.create(poly3_data, target='price', features=model3_features, validation_set=None,
+                                           verbose=False)
+model15 = graphlab.linear_regression.create(poly15_data, target='price', features=model15_features, validation_set=None,
+                                            verbose=False)
+plt.figure(1)
+plt.plot(poly1_data['power_1'], poly1_data['price'], '.',
+                poly1_data['power_1'], model1.predict(poly1_data), '-')
+plt.figure(2)
+plt.plot(poly2_data['power_1'], poly2_data['price'], '.',
+                poly2_data['power_1'], model2.predict(poly2_data), '-')
+plt.figure(3)
+plt.plot(poly3_data['power_1'], poly3_data['price'], '.',
+                poly3_data['power_1'], model3.predict(poly3_data), '-')
+plt.figure(4)
+plt.plot(poly15_data['power_1'], poly15_data['price'], '.',
+                poly15_data['power_1'], model15.predict(poly15_data), '-')
+plt.show()
+
+sales_12, sales_34 = sales.random_split(.5, seed=0)
+set_1, set_2 = sales_12.random_split(.5, seed=0)
+set_3, set_4 = sales_34.random_split(.5, seed=0)
+
+# Fitting 15 degree polynomial on set_<1,2,3,4>
+
+sets = [set_1, set_2, set_3, set_4]
+i = 1
+for set in sets:
+    set_data = polynomial_sframe(set["sqft_living"], 15)
+    set_data_features = set_data.column_names()
+    set_data['price'] = set['price']
+    model = graphlab.linear_regression.create(set_data, target='price', features=set_data_features, validation_set=None,
+                                              verbose=False)
+    print "coefficients for set number ", i, model.get('coefficients').print_rows(20, 20)
+    plt.figure(i)
+    plt.plot(set_data['power_1'], set_data['price'], '.',
+             set_data['power_1'], model.predict(set), '-')
+    i = i + 1
+
+plt.show()
+
+training_and_validation, testing = sales.random_split(.9, seed=1)
+training, validation = training_and_validation.random_split(.5, seed=1)
+
+# For degree in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] (to get this in python type range(1, 15+1))
+# Build an SFrame of polynomial data of train_data['sqft_living'] at the current degree
+# hint: my_features = poly_data.column_names() gives you a list e.g. ['power_1', 'power_2', 'power_3'] which you might find useful for graphlab.linear_regression.create( features = my_features)
+# Add train_data['price'] to the polynomial SFrame
+# Learn a polynomial regression model to sqft vs price with that degree on TRAIN data
+# Compute the RSS on VALIDATION data (here you will want to use .predict()) for that degree and you will need to make a polynmial SFrame using validation data.
+# Report which degree had the lowest RSS on validation data (remember python indexes from 0)
+
+rss_models = {}
+for degree in range(1, 16):
+    regression_model = get_model_with_degree_poly(training, degree, "sqft_living", "price")
+    validation_polynomial_data = polynomial_sframe(validation["sqft_living"], degree)
+    validation_polynomial_data['price'] = validation['price']
+    rss_models[degree] = get_residual_sum_of_squares(regression_model, validation_polynomial_data,
+                                                     validation_polynomial_data['price'])
+    print "rss of degree ", degree, get_residual_sum_of_squares(regression_model, validation_polynomial_data,
+                                                                validation_polynomial_data['price'])
+
+# find the lowest rss
+lowest_rss_degree = -1
+lowest_rss = rss_models[1]
+for degree in rss_models:
+    if rss_models[degree] < lowest_rss:
+        lowest_rss = rss_models[degree]
+        lowest_rss_degree = degree
+
+print "degre with lowest rss is ", lowest_rss_degree
+
+lowest_poly_model = get_model_with_degree_poly(testing, lowest_rss_degree, "sqft_living", 'price')
+testing_polynomial_data = polynomial_sframe(testing["sqft_living"], lowest_rss_degree)
+testing_polynomial_data['price'] = testing['price']
+
+print "rss of lowest degree ", lowest_rss_degree, " on test data", get_residual_sum_of_squares(lowest_poly_model,
+                                                                                               testing_polynomial_data,
+                                                                                               testing_polynomial_data[
+                                                                                                   'price'])
